@@ -1,0 +1,203 @@
+﻿using OpenCvSharp;
+using System.Threading.Tasks;
+
+namespace WorldChampionships2025Analyzer.Interpreters
+{
+	public class DifferentialsInterpreter : InterpreterBase
+	{
+		public DifferentialsInterpreter(Mat src, OcrEngine ocrEngine, int ringNumber) : base(src, ocrEngine)
+		{
+			RingNumber = ringNumber;
+		}
+
+		private Mat DifferentialsPannel { get; set; }
+		private int RingNumber { get; }
+
+		public int[] ReadStackDiffs()
+		{
+			var roiStackPanel = GetRoiStackPanelByRing();   // the 4 columns of stacks (SPORTDATA pills)
+			var rStack = ScaleFromBase(roiStackPanel, SourceX, SourceY, Source.Size());
+			var stackMat = new Mat(Source, rStack);
+
+			//Cv2.ImShow("Debug", stackMat);
+			//Cv2.WaitKey(0);
+
+			// Convert to HSV and threshold for red and blue
+			using var hsv = new Mat();
+			Cv2.CvtColor(stackMat, hsv, ColorConversionCodes.BGR2HSV);
+
+			// Red has two hue ranges
+			var redMask1 = new Mat();
+			var redMask2 = new Mat();
+			Cv2.InRange(hsv, new Scalar(0, 120, 70), new Scalar(10, 255, 255), redMask1);
+			Cv2.InRange(hsv, new Scalar(170, 120, 70), new Scalar(180, 255, 255), redMask2);
+			var redMask = new Mat();
+			Cv2.BitwiseOr(redMask1, redMask2, redMask);
+
+			// Blue
+			var blueMask = new Mat();
+			Scalar lowerb = new Scalar(90, 60, 50);
+			Scalar upperb = new Scalar(115, 255, 255);
+			Cv2.InRange(hsv, lowerb, upperb, blueMask);
+
+			// Clean masks
+			var kOpen = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(3, 3));
+			var kClose = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(7, 3)); // wider horizontally
+			var kErodeV = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(1, 3));
+			Cv2.MorphologyEx(blueMask, blueMask, MorphTypes.Open, kOpen);
+			Cv2.MorphologyEx(blueMask, blueMask, MorphTypes.Close, kClose);
+			Cv2.Erode(blueMask, blueMask, kErodeV, iterations: 1);
+
+			// Split into 4 vertical stack ROIs by equal slicing (assumes fairly uniform layout)
+
+			//Cv2.ImShow("Debug", blueMask);
+			//Cv2.WaitKey(0);
+
+			//Cv2.ImShow("Debug", redMask);
+			//Cv2.WaitKey(0);
+
+			var rects = GetConfigByRing();
+			var diffs = new List<int>();
+
+			foreach (var rect in rects)
+			{
+				//Cv2.ImShow("Debug", stackMat[rect]);
+				//Cv2.WaitKey(0);
+
+				var redScoreRect = GetRedScoreRectByRing(rect);
+				var blueScoreRect = GetBlueScoreRectByRing(rect);
+
+				//Cv2.ImShow("Debug", redMask[redScoreRect]);
+				//Cv2.WaitKey(0);
+
+				//Cv2.ImShow("Debug", blueMask[blueScoreRect]);
+				//Cv2.WaitKey(0);
+
+				var redCount = CountHorizontalBars(redMask[redScoreRect]);
+				var blueCount = CountHorizontalBars(blueMask[blueScoreRect]);
+
+				diffs.Add(redCount - blueCount);
+			}
+
+			return diffs.ToArray();
+		}
+
+		private Rect GetBlueScoreRectByRing(Rect rect)
+		{
+			switch (RingNumber)
+			{
+				case 6:
+					return new Rect(rect.X, 45, 63, 40);
+				case 7:
+					return new Rect(rect.X, 32, 45, 28);
+				default:
+					return new Rect(rect.X, 49, 63, 40);
+			}
+		}
+
+		private Rect GetRedScoreRectByRing(Rect rect)
+		{
+			switch (RingNumber)
+			{
+				case 7:
+					return new Rect(rect.X, 0, 45, 28);
+				default:
+					return new Rect(rect.X, 0, 63, 40);
+			}
+		}
+
+		private Rect GetRoiStackPanelByRing()
+		{
+			switch (RingNumber)
+			{
+				case 1:
+					return new Rect(1640, 900, 450, 90);
+				case 6:
+					return new Rect(1640, 920, 450, 90);
+				default:
+					return new Rect(1640, 900, 450, 90);
+			}
+		}
+
+		private Rect[] GetConfigByRing()
+		{
+			switch (RingNumber)
+			{
+				case 1:
+					return [
+							new Rect(0, 0, 68, 90),
+							new Rect(69, 0, 68, 90),
+							new Rect(137, 0, 68, 90),
+							new Rect(205, 0, 68, 90),
+						];
+				case 6:
+					return [
+							new Rect(0, 0, 68, 85),
+							new Rect(69, 0, 68, 90),
+							new Rect(137, 0, 68, 90),
+							new Rect(205, 0, 68, 90),
+						];
+				case 7:
+					return [
+							new Rect(0, 0, 45, 60),
+							new Rect(46, 0, 45, 60),
+							new Rect(91, 0, 45, 60),
+							new Rect(136, 0, 45, 60),
+						];
+				default:
+					return [
+							new Rect(0, 0, 68, 90),
+							new Rect(69, 0, 68, 90),
+							new Rect(137, 0, 68, 90),
+							new Rect(205, 0, 68, 90),
+						];
+			}
+
+		}
+
+		private int CountHorizontalBars(Mat mask)
+		{
+			// Count connected components that look like horizontal bars
+			int rectangleHeightSum = 0;
+
+			Cv2.Threshold(mask, mask, 127, 255, ThresholdTypes.Binary);
+			Cv2.FindContours(mask, out var contours, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
+
+			foreach(var contour in contours)
+			{
+				rectangleHeightSum += Cv2.BoundingRect(contour).Height;
+			}
+
+			if (rectangleHeightSum >= 27 && rectangleHeightSum <= 35)
+			{
+				return 4;
+			}
+
+			if (rectangleHeightSum >= 20 && rectangleHeightSum <= 26)
+			{
+				return 3;
+			}
+
+			if (rectangleHeightSum >= 9 && rectangleHeightSum <= 19)
+			{
+				return 2;
+			}
+
+			if (rectangleHeightSum >= 1 && rectangleHeightSum <= 8)
+			{
+				return 1;
+			}
+
+			return 0;
+		}
+
+		public (bool blueWin, bool redWin) InferWinner(int[] diffs)
+		{
+			int blue = diffs.Count(d => d < 0);
+			int red = diffs.Count(d => d > 0);
+			if (blue > red) return (true, false);
+			if (red > blue) return (false, true);
+			return (false, false);
+		}
+	}
+}

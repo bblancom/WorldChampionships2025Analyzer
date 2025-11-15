@@ -1,0 +1,220 @@
+﻿using OpenCvSharp;
+using System.Data;
+using Tesseract;
+
+namespace WorldChampionships2025Analyzer.Interpreters
+{
+	public class FighterBoxInterpreter : InterpreterBase
+	{
+		public FighterBoxInterpreter(Mat src, OcrEngine ocr, Competitor competitor) : base(src, ocr)
+		{
+			var RoiBlueBlock = new OpenCvSharp.Rect(750, 960, 480, 150);     // blue name + federation + country flag/label
+			var RoiRedBlock = new OpenCvSharp.Rect(60, 960, 450, 150);       // red name + federation + country
+
+			var rBlue = ScaleFromBase(RoiBlueBlock, SourceX, SourceY, src.Size());
+			var rRed = ScaleFromBase(RoiRedBlock, SourceX, SourceY, src.Size());
+			Mat bgr = competitor == Competitor.Blue ? new Mat(src, rBlue) : new Mat(src, rRed);
+			var text = ReadNameBlock(bgr);
+			ParseNameCountryLines(text);
+		}
+
+		public string Name { get; set; }
+
+		public string Country { get; set; }
+
+		static string StripNonLetters(string s) => new string(s.Where(ch => char.IsLetter(ch) || ch == ' ' || ch == '-').ToArray());
+
+		static bool IsAllCapsAlpha(string s) => s.Length > 0 && s.All(ch => char.IsUpper(ch) || ch == ' ' || ch == '-');
+
+		static readonly HashSet<string> CountrySet = new(StringComparer.OrdinalIgnoreCase)
+{
+	"CANADA","UNITED STATES","USA","ENGLAND","SCOTLAND","UKRAINE","POLAND","SWEDEN","PARAGUAY",
+	"GERMANY","NORWAY","FINLAND","IRELAND","SPAIN","ITALY","FRANCE","KOREA","ARGENTINA","COLOMBIA",
+	"BRAZIL","MEXICO","AUSTRALIA","NEW ZEALAND","NETHERLANDS","BELGIUM","CZECH REPUBLIC",
+	"SLOVAKIA","HUNGARY","ROMANIA","BULGARIA","GEORGIA","KAZAKHSTAN","UZBEKISTAN","MOLDOVA", "MALAYSIA", "CHINESE TAIPEI", "CHILE", "INDIVIDUAL NEUTRAL ATHLETES"
+    // add as needed
+};
+		static readonly HashSet<string> NameSet = new(StringComparer.OrdinalIgnoreCase)
+{
+	"Murillo Diego","Spina Augusto","Toyama Sogo","Lema Efrata","Tolstogan Valeriu","Kiss Levente","Pena Gonzalo","Thapa Magar Niresh","Lin Chun Kit","Almeida Lautaro","Bernstein Daniel","Talhaoui Kabil Yassine","Martin Finn","Linero Cruz Javier","Mcavoy Declan","Looman Zachary","Zuger Andreas","Kheng Xing Ooi","Ghosal Alexander","Mujanovic Dino","Lewis Caleb","Blom Michael","Jian Yang Wong","Donde Gonzalo","Burton Joshua","Franke Matthias","Brooks Spencer","Alexander Nielsen Tristan","Dancu Ioan Marius","David Mario","Cotey Bradley","Bin Bahrin Muhammad Aidil","Lindsay Akino Jordan","Falowski Kamil","Chhantyal Chamindra Bahadur","Chvojka Daniel","Nicoara Radu","Mrozicki Mateusz","Neary Sean","Blicharski Maciej","Cek Andrea","Jerinic Njegos","Wahlberg Nils","Veiga Juan Pedro","Vitiello Tommaso","Hansson Anton","Stige David","Lehti Janita","Bahamondes Scarlett","Burzanska Hanna","Ying Er Lee","Lin Yu-Shih","Oro Veronica","Berggren Amanda","Childs Amy","Iversen Stine Hauge","Dzehovic Ajsa","Manzhos Diana","Griffith Iveta","Feley Deena","Bartus Monika","Cancedda Eleonora","Kumal Niraula Sita","Atencia Aranda Ainara","Yadav Shobha","Tram Maika","Labrie Yra","Ahlskog Hou Li-Lian","Groenewald Cara","Paulo-Desmarais Sophie","Wealleans Alyssa","Savitskaya Hanna","Dearmas Patricia","Berle Aurora Dønheim","Vargas Jimena","Altamirano Maria Agustina","Czuchan Patrycja","Delrock Sam","Lobley Ellena","Naszer Julia Rahel","Trotter Brenda","Angarita Lucy Katherine","Sjoberg Ellen","Pecchielan Linda","Franks Christine","Gheorghita Roxana Maria","Checcucci Valeria","Prunkl Jordan","Lehane Sarah","Raman Safae","Ohare Megan","Pol Palacios Valeria","Cobo Victoria","Salja Wyon Emma","Rivera Beltran Juanita","Delgado Camila","Frontali Tommaso","Huang Yen-Zhen","Dearmas Gabriel","Okeric Tarik","Lucic Marin","Krauchanka Andrei","Oudolnyi Vadim","Chhantyal Begam","Vogler Gideon","Loodtz Theo Lagreid","Doniesiewicz Szymon","Verbraeken Kilan","Vergara Marcelo","Amaleethan Erwin","Dariozzi Thiago","Stirling Reece","Milutinovic Pavle","Tuite Shane","Haienko Artem","Nigmatullaev Nodirbek","Szabo Janos Zoltan","Alemu Seyfemichael","Vistal Alexej","Triqui Anis","Dreglea Stefan","Rueda Rodrigo","Payton Harry","Tomas Jakub","Norén Anton","Odonnell Sean","Tuite James","Capolongo Samuele","Sosa Felipe","Zadina Oliver","Bin Azmi Muhammad Danial","Mirzoev Jahongir","Ellis Lachlan","Oneil Sean","Tesfa Nebiyu","Rmadan Ahmed","Eckhardt Jason","Chavarria Medina Matias","Giri Sajan","Van De Veerdonk Chris","Tomescu Alexandru Ioan","Rosato Damiano","Blicharski Marcin","Stupenko Roman","Lobban Jack","Leberl Zack","Lenz Tobias","Cuellar Jimmy","Skvor Daniel","Moriarty Luke","Gonzalez Martos Francisco Rafael","Helin Onni","Vacariu Vlad","Dusard Nicholos Marlon","Turner Lucas","Laplante Christophe","Valdez Fabian","Balboa Cristian","Ismailov Zelimhan","Castelnuovo Alessandro","Stone Richard Lloyd","Trinder James","Svraka Faris","Carracedo Trigo Manuel","Turner Benjamin","Baila Alexandru Ioan","Kiviranta Tino","Sierszchulski Kamil","Moir Lewis","Helamb Adam","Horbul Yevhenii","Bien Bartosz","Cacciatore Gianfranco","Vomiero Stefano","Pedersen Havar","Tarasenko Victoria","Wessels Isabella","Labrie Pia","Pender Kate","Devine Sydney","Kovaliova Veronika","Pryimak Lidiia","Henwood Holly","Stridbeck Isabella","Zagar Slemensek Larisa","Mcnair Amy","Canut Camila","Cehajic Lamija","Waddell Hollie","Miller Hanna","Van Veen Helena","Dilmurodova Sevara","Kosmowska Maja","Kamenetzki Daniel","Esteche Tobias","Gozzano Rodrigo","Mitchell Connor","Lypovetskiy Denys","Hassanipour Daniel","Hatta Ginryu","Cammarota Antonio","Vlahovic Marko","Rueda Hernan","Schuddinck Rune","Hong Wenquan","Turner Ryan","Taylor Thomas","Larkin David","Talhaoui Kabil Bahaa","Nishio Issa","Mcdermott Kieran","Stirbu Luca","Hnatko Danylo","Zagoranski Ziga","Sodikov Abduazim","Montero Miguel","Ferreyra Walter","Vilchez Lopez Jaime","Jara Dennis","Hubert Will","Odlow Jon","Holroyd Mason","Chumachenko Nazar","Gingras Marie-Christine","Flores Sabrina","Hemmer Ana","Vukic Ana","Martinez Ester","Listhaug Jenny Marvel","Pasanen Py","Vandenbrink Makenna","Karavaieva Anhelina","Duffour Florencia","Dixon Hannah","Runesson Ella","Rosenbaum Joanne Theresia Liz","Hodnik Lourdes","Johansen Sofie Haugsleett","Semb Helene","Diefenbach Fenne","Janiszewska Katarzyna","Mukha Iryna","Wallace Rachel","Pelkey Serena","Swinburne Jemma","Ulmasova Robiya","Cornea Andreea Casandra","Krucayova Teresa","Smith Taylor","Moriya Naomi","Mazzanti Elena","Bortlikova Eliska","Mettinen Nita","Osullivan Sarah","Bouymejjan Lina","Luniewska Karolina","Barada Tyra","Hovelius Maria","Hanisch Wioletta","Palavecino Mailen","Ilic Ivana","Yates Cassandra","Martinez Chiara","Van Der Veer Myrthe","Cadelano Stefano","Balachandran Vimal Nair","Rizzo Lautaro","Tamang Dilba","Rinchinov Altan","Hubbuck Iden","Baratov Azamat","Rannou Victor","Shibasaki Takashi","Giuliano Simone","G. Emond Steve","Zsarko Daniel Peter","Garcia Nahuel Ivan","Gudyma Roman","Filippidis Filippos","Balázs Ervin","Salja Wyon Adis","Alijagic Emir","Babrovich Ivan","Gomez De Olivera Thiago","Barenbaum Amit","Lingers Kayden Clyde","Olejar Samuel","Stirling Abigail","Palfi Boroka","Pampiglioni Indira","Brider Isabel","Tome Nieminen Laura","Korolovych Daryna","Mcintyre Hannah","Bordiez Bianca","Rega Eliska","Ekblom Alice","Mierkiewicz Zuzanna","Gomez Esperanza","Kleckova Klara","Varela Rodriguez Alba","Woodrow Anikah","Vogt Georgia","Gordionok Evelina","Kowalczyk Monika","Macrury Serena","Jilkova Barbora","Tamas Boglarka","Postu Claudia Teofana","Vali Samarah","Tarasenko Davyd","Belmonte Gil Nicolas","Greene-Ryding Darren","Baila Teodor Mihai","Sheng Xihan","Gonzalez Matias","Gurung Sajan","Feeley Lucas","Millan Benitez Juan Sebastian","Daverio Valentino","Nicolucci Mateo","Abe Susumu","Oranje Cody","Ulvinen Leevi","Downey Alvaro","Maggioni Mauricio","Cox Darryl","Croft David","Cuellar William","Maggs Dylan","Johansson Santhe","Kruk Sebastian","Fujimoto Naoto","Valkov Egor Andreevich","Jeffery Bailey","Stender Lucas","Traslavina Diego","Boyens Maximilien","Alilou Aymane","Kruk Kamil","Iversen Marius Hauge","Nunez Baron","Gurung Manoj","Putseys Yannick","Saccomanno Lucas","Spencer Ii Sheldon","Couture Francois","Bewa Jeremie","Pedersen Håvar","Bianchi Bruno","Ceaser Elora","Ayala-Trujillo Luna-Silvana","Lång Johanna","Kucharska Julia","Pacheco Eva","Hopfe Danielle","Haakana Mia","Binti Kamaruzzaman Nur Aqilah","Rossi Sofia","Vendlands Edvards","Hubert Noah","Formanek David","Lewandowski Nikodem","Shamil Yenus","Fogarty Thomas","Budhathoki Magar Janak","Valkov Daniil","Tirelli Lepore Andrea","Lagies Tristan","Kim Vladimir","Wealleans Keara","Wendykier Michelle","Schmidt Victoria","Bordiez Aldana","Stetinova Eva","Reszka Klaudia","Vrinat Alice","Kanka Filippa","Beaudoin Caroline","Takahashi Mika","Makoviichuk Sofiia","Leppanen Jasmin","Domene Valverde Laura","Amores Ivana","Shan Meng Hui","Becsi Nikolett","Fabian Eszter","Acosta Ailen","Moreno Pomares Ana Maria","Pigarova Anna","Li Selma","Shibasaki Rio","Lagace Genevieve","Planko Veronika","Cichon Martyna","Singleton Jaimie","Reshetnikova Alena"
+    // add as needed
+};
+
+		public string ReadNameBlock(Mat bgr)
+		{
+			using var roi = bgr.Clone();
+
+			// 1) Upscale
+			Cv2.Resize(roi, roi, new Size(), 2.0, 2.0, InterpolationFlags.Cubic);
+
+			// 2) HSV -> isolate white text (low S, high V)
+			using var hsv = new Mat();
+			Cv2.CvtColor(roi, hsv, ColorConversionCodes.BGR2HSV);
+			var whiteMask = new Mat();
+			Cv2.InRange(hsv, new Scalar(0, 0, 200), new Scalar(180, 70, 255), whiteMask);
+
+			// 3) Clean/connect strokes
+			var k = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(3, 3));
+			Cv2.MorphologyEx(whiteMask, whiteMask, MorphTypes.Close, k);
+
+			// 4) Invert for OCR
+			var forOcr = new Mat();
+			Cv2.BitwiseNot(whiteMask, forOcr);
+
+			// 5) OCR with two PSMs; take best/longest
+			var t1 = OcrEngine.Read(forOcr, new OcrPreset { Psm = PageSegMode.SingleBlock, Whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,-'" }).Text;
+			var t2 = OcrEngine.Read(forOcr, new OcrPreset { Psm = PageSegMode.SparseText, Whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,-'" }).Text;
+
+			return Cleanup(t1.Length >= t2.Length ? t1 : t2);
+		}
+
+		private string Cleanup(string s)
+		{
+			s = s.Replace('\r', '\n');
+			s = System.Text.RegularExpressions.Regex.Replace(s, "[ \t]+", " ");
+			s = s.Replace("–", "-").Replace("—", "-");
+			return string.Join("\n", s.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0));
+		}
+
+		private void ParseNameCountryLines(string text)
+		{
+			var lines = text.Split('\n')
+							.Select(x => x.Trim())
+							.Where(x => x.Length > 0)
+							.ToList();
+
+			if (lines.Count == 0) return;
+
+			var stringApproximationUtils = new StringApproximation();
+
+			// Try detect country explicitly
+			for (int i = lines.Count - 1; i >= 0; i--)
+			{
+				var cleanedLine = StripNonLetters(lines[i]).ToUpperInvariant();
+				var (match, similarity) = stringApproximationUtils.FindBestMatch(cleanedLine, CountrySet.ToList());
+
+				if (similarity > 50)
+				{
+					Country = match;
+					break;
+				}
+
+				Country = CleanCountryLine(match);
+			}
+
+			// Find the first line that looks like a name and not federation
+			foreach (var line in lines)
+			{
+				var (name, similarityName) = stringApproximationUtils.FindBestMatch(line, NameSet.ToList());
+
+				if (similarityName > 50)
+				{
+					Name = NormalizeName(name);
+					break;
+				}
+
+				Name = NormalizeName(line);
+				break;
+			}
+
+			// Fallbacks
+			if (string.IsNullOrEmpty(Name)) Name = NormalizeName(lines.First());
+			if (string.IsNullOrEmpty(Country)) Country = GuessCountryFromLines(lines);
+		}
+
+		static bool LooksLikeName(string u)
+		{
+			// name-like: 2–4 words, all caps words, may include apostrophes/hyphens
+			var words = u.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+			return words.Length >= 1 && words.Length <= 5 && words.All(w => w.All(ch => char.IsLetter(ch) || ch == '-' || ch == '\''));
+		}
+		static string NormalizeName(string s)
+		{
+			// Title-case only if input is all-caps; otherwise keep as-is
+			if (s == s.ToUpperInvariant())
+			{
+				return string.Join(" ", s.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries)
+					.Select(w => char.ToUpper(w[0]) + (w.Length > 1 ? w.Substring(1) : "")));
+			}
+			return s.Trim();
+		}
+
+		static string CleanCountryLine(string raw)
+		{
+			if (string.IsNullOrWhiteSpace(raw)) return "";
+
+			// 1) Keep only letters, spaces, and hyphens
+			string filtered = new string(raw
+				.Where(ch => char.IsLetter(ch) || ch == ' ' || ch == '-')
+				.ToArray()).Trim();
+
+			// Normalize multiple spaces and hyphens
+			filtered = System.Text.RegularExpressions.Regex.Replace(filtered, @"\s+", " ");
+			filtered = filtered.Replace(" - ", "-").Replace("–", "-").Replace("—", "-").Trim();
+
+			if (filtered.Length == 0) return "";
+
+			// 2) If line contains a known country anywhere, extract that substring
+			// Try longest country names first to avoid partial matches
+			var byLengthDesc = CountrySet.OrderByDescending(c => c.Length);
+			foreach (var cname in byLengthDesc)
+			{
+				int idx = filtered.IndexOf(cname, StringComparison.OrdinalIgnoreCase);
+				if (idx >= 0)
+				{
+					// Ensure we are on token boundaries
+					bool leftOk = idx == 0 || !char.IsLetter(filtered[idx - 1]);
+					int end = idx + cname.Length;
+					bool rightOk = end >= filtered.Length || !char.IsLetter(filtered[end]);
+
+					if (leftOk && rightOk)
+						return cname.ToUpperInvariant();
+				}
+			}
+
+			// 3) Token-based heuristic: drop short noise tokens from the start
+			var tokens = filtered.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+			// Remove up to first two short tokens if they look like flag noise
+			int guard = 0;
+			while (tokens.Count > 1 && guard++ < 2)
+			{
+				string t0 = tokens[0];
+				if (LikelyFlagNoise.Contains(t0) || t0.Length <= 2)
+					tokens.RemoveAt(0);
+				else
+					break;
+			}
+
+			string candidate = string.Join(" ", tokens);
+
+			// 4) Final normalization: if all caps and length reasonable, accept as country
+			string upper = candidate.ToUpperInvariant();
+			if (upper.Length <= 24 && upper.All(ch => char.IsUpper(ch) || ch == ' ' || ch == '-'))
+				return upper;
+
+			return upper; // fallback: return the cleaned line
+		}
+
+
+		static string GuessCountryFromLines(List<string> lines)
+		{
+			foreach (var line in lines.AsEnumerable().Reverse())
+			{
+				var L = StripNonLetters(line).ToUpperInvariant();
+				if (CountrySet.Contains(L)) return L;
+				if (IsAllCapsAlpha(L) && L.Length <= 20) return L;
+			}
+			return "";
+		}
+
+		static readonly string[] FederationKeywords = new[]{
+	"FEDERATION","ASSOCIATION","UNION","TEAM","CLUB","INTERNATIONAL","TKD","TAEKWON","TAEKWON-DO","TAEKWONDO","NATIONAL"
+};
+		// Short tokens that often come from flag/icon OCR and should be ignored if they precede a country
+		static readonly HashSet<string> LikelyFlagNoise = new(StringComparer.OrdinalIgnoreCase)
+{
+	"PE","P","PI","I","L","O","[]","|", ":", ".", "-", "·"
+};
+	}
+}
