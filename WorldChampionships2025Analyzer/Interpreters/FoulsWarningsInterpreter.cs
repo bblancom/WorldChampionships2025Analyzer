@@ -5,8 +5,11 @@ namespace WorldChampionships2025Analyzer.Interpreters
 {
 	public class FoulsWarningsInterpreter : InterpreterBase
 	{
-		public FoulsWarningsInterpreter(Mat src, OcrEngine ocrEngine) : base(src, ocrEngine)
+		private readonly int _ringNumber;
+
+		public FoulsWarningsInterpreter(Mat src, OcrEngine ocrEngine, int ringNumber = 1) : base(src, ocrEngine)
 		{
+			_ringNumber = ringNumber;
 		}
 
 		public string WarningsBlue => ExtractIntFromRoi(WarnBlueMat, Competitor.Blue);
@@ -14,10 +17,10 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		public string WarningsRed => ExtractIntFromRoi(WarnRedMat, Competitor.Red);
 		public string FoulsRed => ExtractIntFromRoi(FoulsRedMat, Competitor.Red);
 
-		private OpenCvSharp.Rect RoiWarningsRed => new(1590, 1000, 50, 35); // bottom-right warnings/fouls area
-		private OpenCvSharp.Rect RoiWarningsBlue => new(1590, 1050, 50, 35); // bottom-right warnings/fouls area
-		private OpenCvSharp.Rect RoiFoulsRed => new(1880, 1000, 50, 35); // bottom-right warnings/fouls area
-		private OpenCvSharp.Rect RoiFoulsBlue => new(1880, 1045, 50, 35); // bottom-right warnings/fouls area
+		private OpenCvSharp.Rect RoiWarningsRed => GetRoiWarningsRedByRing();
+		private OpenCvSharp.Rect RoiWarningsBlue => GetRoiWarningsBlueByRing();
+		private OpenCvSharp.Rect RoiFoulsRed => GetRoiFoulsRedByRing();
+		private OpenCvSharp.Rect RoiFoulsBlue => GetRoiFoulsBlueByRing();
 
 		private OpenCvSharp.Rect RFoulsRed => ScaleFromBase(RoiFoulsRed, SourceX, SourceY, Source.Size());
 		private OpenCvSharp.Rect RWarnBlue => ScaleFromBase(RoiWarningsBlue, SourceX, SourceY, Source.Size());
@@ -33,6 +36,7 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		{
 			//Cv2.ImShow("debug", cropped);
 			//Cv2.WaitKey(0);
+
 			// 1) Upscale before operations
 			Cv2.Resize(cropped, cropped, new Size(), 3, 3, InterpolationFlags.Lanczos4);
 
@@ -48,7 +52,6 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				var upperRed = new Scalar(10, 255, 255);
 				var upperRed2 = new Scalar(180, 255, 255);
 
-				//Scalar upper = isRed ? new Scalar(10, 255, 255) : new Scalar(105, 255, 255);
 				using var mask = new Mat();
 				using var mask2 = new Mat();
 				using var finalMask = new Mat();
@@ -59,8 +62,11 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				Cv2.BitwiseOr(mask, mask2, finalMask);
 				Cv2.BitwiseNot(finalMask, mask);
 
+				//Cv2.ImShow("debug", mask);
+				//Cv2.WaitKey(0);
+
 				var (text, confidence) = OcrEngine.Read(mask, new OcrPreset { Psm = PageSegMode.SingleChar, Whitelist = "0123456789-" });
-				var retVal = text.Contains('-') ? "0" : text.TrimEnd();
+				var retVal = text.Contains('-') || string.IsNullOrEmpty(text) ? "0" : text.TrimEnd();
 
 				return retVal;
 			}
@@ -73,12 +79,55 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				Cv2.InRange(hsv, lower, upper, mask);
 				Cv2.BitwiseNot(mask, mask);
 
+				//Cv2.ImShow("debug", mask);
+				//Cv2.WaitKey(0);
+
 				var (text, confidence) = OcrEngine.Read(mask, new OcrPreset { Psm = PageSegMode.SingleChar, Whitelist = "0123456789-" });
-				var retVal = text.Contains('-') ? "0" : text.TrimEnd();
+				var retVal = text.Contains('-') || string.IsNullOrEmpty(text)? "0" : text.TrimEnd();
 
 				return retVal;
 			}
 
+		}
+
+		private OpenCvSharp.Rect GetRoiWarningsRedByRing()
+		{
+			switch (_ringNumber)
+			{
+				default:
+					return new(1590, 1000, 50, 35);
+			}
+		}
+
+		private OpenCvSharp.Rect GetRoiWarningsBlueByRing()
+		{
+			switch (_ringNumber)
+			{
+				case 7:
+					return new(1590, 1000, 50, 25);
+				default:
+					return new(1590, 1050, 50, 35);
+			}
+		}
+
+		private OpenCvSharp.Rect GetRoiFoulsRedByRing()
+		{
+			switch (_ringNumber)
+			{
+				default:
+					return new(1880, 1000, 50, 35);
+			}
+		}
+
+		private OpenCvSharp.Rect GetRoiFoulsBlueByRing()
+		{
+			switch (_ringNumber)
+			{
+				case 7:
+					return new(1880, 1045, 50, 25);
+				default:
+					return new(1880, 1045, 50, 35);
+			}
 		}
 	}
 }

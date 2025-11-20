@@ -6,7 +6,8 @@ namespace WorldChampionships2025Analyzer
 {
 	public class ComputerVisionUtils
 	{
-		private readonly int? matchRing;
+		private int? matchRing;
+		private int[]? matchDifferentials;
 
 		public ComputerVisionUtils(Mat src, OcrEngine ocr, string category)
 		{
@@ -30,8 +31,8 @@ namespace WorldChampionships2025Analyzer
 		public string Category { get; }
 		public string MatchRound => MatchRoundInterpreter.ExtractRound();
 		public DateTime? MatchDateTime => DateTimeInterpreter.ParseDateTime();
-		public int MatchRing => matchRing ?? RingInterpreter.ParseRing();
-		public int[] MatchDifferentials => DifferentialsInterpreter.ReadStackDiffs();
+		public int MatchRing => matchRing ??= RingInterpreter.ParseRing();
+		public int[] MatchDifferentials => matchDifferentials ??= DifferentialsInterpreter.ReadStackDiffs();
 		public (bool blueWin, bool redWin) MatchWinnerLoser => DifferentialsInterpreter.InferWinner(MatchDifferentials);
 
 		public MatchData CaptureMatchData()
@@ -39,7 +40,6 @@ namespace WorldChampionships2025Analyzer
 			// We have to identify ring number first in order to set all configurations based on that...
 			var ring = MatchRing;
 			var (blueWin, redWin) = MatchWinnerLoser;
-			var diffs = MatchDifferentials;
 			var dt = MatchDateTime;
 			var round = MatchRound;
 
@@ -49,6 +49,7 @@ namespace WorldChampionships2025Analyzer
 			var redName = RedCompetitorInterpreter.Name;
 			var redCountry = RedCompetitorInterpreter.Country;
 
+			var diffs = MatchDifferentials;
 			var warningsRedText = FoulsWarningsInterpreter.WarningsRed;
 			var foulsRedText = FoulsWarningsInterpreter.FoulsRed;
 			var warningsBlueText = FoulsWarningsInterpreter.WarningsBlue;

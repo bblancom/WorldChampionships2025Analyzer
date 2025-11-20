@@ -131,9 +131,10 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			// Find the first line that looks like a name and not federation
 			foreach (var line in lines)
 			{
-				var (name, similarityName) = stringApproximationUtils.FindBestMatch(line, NameSet.ToList());
+				var (name, similarityName) = stringApproximationUtils.FindBestMatch(line, [.. NameSet]);
 
-				if (similarityName > 50)
+				// Not so high similarity, after all should be quite accurate to pick one
+				if (similarityName > 40)
 				{
 					Name = NormalizeName(name);
 					break;

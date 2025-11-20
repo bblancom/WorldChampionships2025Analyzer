@@ -48,8 +48,6 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			Cv2.MorphologyEx(blueMask, blueMask, MorphTypes.Close, kClose);
 			Cv2.Erode(blueMask, blueMask, kErodeV, iterations: 1);
 
-			// Split into 4 vertical stack ROIs by equal slicing (assumes fairly uniform layout)
-
 			//Cv2.ImShow("Debug", blueMask);
 			//Cv2.WaitKey(0);
 
@@ -76,10 +74,16 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				var redCount = CountHorizontalBars(redMask[redScoreRect]);
 				var blueCount = CountHorizontalBars(blueMask[blueScoreRect]);
 
+				if(redCount > 0 && blueCount > 0)
+				{
+					// Something is wrong
+					Console.Error.WriteLine("Error counting scores");
+				}
+
 				diffs.Add(redCount - blueCount);
 			}
 
-			return diffs.ToArray();
+			return [.. diffs];
 		}
 
 		private Rect GetBlueScoreRectByRing(Rect rect)
@@ -89,7 +93,7 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				case 6:
 					return new Rect(rect.X, 45, 63, 40);
 				case 7:
-					return new Rect(rect.X, 32, 45, 28);
+					return new Rect(rect.X, 45, 63, 40);
 				default:
 					return new Rect(rect.X, 49, 63, 40);
 			}
@@ -99,8 +103,6 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		{
 			switch (RingNumber)
 			{
-				case 7:
-					return new Rect(rect.X, 0, 45, 28);
 				default:
 					return new Rect(rect.X, 0, 63, 40);
 			}
@@ -139,10 +141,10 @@ namespace WorldChampionships2025Analyzer.Interpreters
 						];
 				case 7:
 					return [
-							new Rect(0, 0, 45, 60),
-							new Rect(46, 0, 45, 60),
-							new Rect(91, 0, 45, 60),
-							new Rect(136, 0, 45, 60),
+							new Rect(0, 0, 68, 90),
+							new Rect(69, 0, 60, 90),
+							new Rect(137, 0, 60, 90),
+							new Rect(200, 0, 60, 90),
 						];
 				default:
 					return [
@@ -165,7 +167,11 @@ namespace WorldChampionships2025Analyzer.Interpreters
 
 			foreach(var contour in contours)
 			{
-				rectangleHeightSum += Cv2.BoundingRect(contour).Height;
+				var height = Cv2.BoundingRect(contour).Height;
+				var width = Cv2.BoundingRect(contour).Width;
+
+				//if(height < width)
+					rectangleHeightSum += height;
 			}
 
 			if (rectangleHeightSum >= 27 && rectangleHeightSum <= 35)
