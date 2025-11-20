@@ -14,20 +14,20 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		public string WarningsRed => ExtractIntFromRoi(WarnRedMat, Competitor.Red);
 		public string FoulsRed => ExtractIntFromRoi(FoulsRedMat, Competitor.Red);
 
-		private OpenCvSharp.Rect RoiWarningsRed => new OpenCvSharp.Rect(1590, 1000, 50, 35); // bottom-right warnings/fouls area
-		private OpenCvSharp.Rect RoiWarningsBlue => new OpenCvSharp.Rect(1590, 1050, 50, 35); // bottom-right warnings/fouls area
-		private OpenCvSharp.Rect RoiFoulsRed => new OpenCvSharp.Rect(1880, 1000, 50, 35); // bottom-right warnings/fouls area
-		private OpenCvSharp.Rect RoiFoulsBlue => new OpenCvSharp.Rect(1880, 1045, 50, 35); // bottom-right warnings/fouls area
+		private OpenCvSharp.Rect RoiWarningsRed => new(1590, 1000, 50, 35); // bottom-right warnings/fouls area
+		private OpenCvSharp.Rect RoiWarningsBlue => new(1590, 1050, 50, 35); // bottom-right warnings/fouls area
+		private OpenCvSharp.Rect RoiFoulsRed => new(1880, 1000, 50, 35); // bottom-right warnings/fouls area
+		private OpenCvSharp.Rect RoiFoulsBlue => new(1880, 1045, 50, 35); // bottom-right warnings/fouls area
 
 		private OpenCvSharp.Rect RFoulsRed => ScaleFromBase(RoiFoulsRed, SourceX, SourceY, Source.Size());
 		private OpenCvSharp.Rect RWarnBlue => ScaleFromBase(RoiWarningsBlue, SourceX, SourceY, Source.Size());
 		private OpenCvSharp.Rect RFoulsBlue => ScaleFromBase(RoiFoulsBlue, SourceX, SourceY, Source.Size());
 		private OpenCvSharp.Rect RWarnRed => ScaleFromBase(RoiWarningsRed, SourceX, SourceY, Source.Size());
 
-		private Mat WarnRedMat => new Mat(Source, RWarnRed);
-		private Mat FoulsRedMat => new Mat(Source, RFoulsRed);
-		private Mat WarnBlueMat => new Mat(Source, RWarnBlue);
-		private Mat FoulsBlueMat => new Mat(Source, RFoulsBlue);
+		private Mat WarnRedMat => new(Source, RWarnRed);
+		private Mat FoulsRedMat => new(Source, RFoulsRed);
+		private Mat WarnBlueMat => new(Source, RWarnBlue);
+		private Mat FoulsBlueMat => new(Source, RFoulsBlue);
 
 		public string ExtractIntFromRoi(Mat cropped, Competitor competitor)
 		{
@@ -52,14 +52,15 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				using var mask = new Mat();
 				using var mask2 = new Mat();
 				using var finalMask = new Mat();
+
 				Cv2.InRange(hsv, lowerRed, upperRed, mask);
 				Cv2.InRange(hsv, lowerRed2, upperRed2, mask2);
 
 				Cv2.BitwiseOr(mask, mask2, finalMask);
-
 				Cv2.BitwiseNot(finalMask, mask);
+
 				var (text, confidence) = OcrEngine.Read(mask, new OcrPreset { Psm = PageSegMode.SingleChar, Whitelist = "0123456789-" });
-				var retVal = text == "-" ? "0" : text.TrimEnd();
+				var retVal = text.Contains('-') ? "0" : text.TrimEnd();
 
 				return retVal;
 			}
@@ -71,8 +72,9 @@ namespace WorldChampionships2025Analyzer.Interpreters
 
 				Cv2.InRange(hsv, lower, upper, mask);
 				Cv2.BitwiseNot(mask, mask);
+
 				var (text, confidence) = OcrEngine.Read(mask, new OcrPreset { Psm = PageSegMode.SingleChar, Whitelist = "0123456789-" });
-				var retVal = text == "-" ? "0" : text.TrimEnd();
+				var retVal = text.Contains('-') ? "0" : text.TrimEnd();
 
 				return retVal;
 			}

@@ -22,6 +22,10 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				case 6:
 					// No Datetime
 					break;
+				case 7:
+					RoiDate = new Rect(140, 930, 115, 25);
+					RoiTime = new Rect(150, 900, 95, 25);
+					break;
 				default:
 					RoiDate = new Rect(140, 920, 110, 40);
 					RoiTime = new Rect(150, 900, 90, 30);
@@ -45,12 +49,40 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			//Cv2.ImShow("Debug", timeMat);
 			//Cv2.WaitKey(0);
 
+			//Cv2.ImShow("Debug", dateMat);
+			//Cv2.WaitKey(0);
+
 			var timeText = OcrEngine.Read(timeMat, OcrDigits).Text;
 			var dateText = OcrEngine.Read(dateMat, OcrDigits).Text;
 
+			if (string.IsNullOrEmpty(timeText))
+			{
+				Console.Error.WriteLine($"Warning: OCR Engine could not read time from picture. Value:[{timeText}]");
+				return null;
+			}
+
+			if (string.IsNullOrEmpty(dateText))
+			{
+				Console.Error.WriteLine($"Warning: OCR Engine could not read date from picture. Value:[{dateText}]");
+				return null;
+			}
+
 			// Expect time like "16:38" and date like "10.10.2025."
-			string time = ExtractTime(timeText);
-			string date = ExtractDate(dateText);
+			var time = ExtractTime(timeText);
+			var date = ExtractDate(dateText);
+
+			if (string.IsNullOrEmpty(time))
+			{
+				Console.Error.WriteLine($"Warning: Unable to extract time from OCR text '{timeText}'");
+				return null;
+			}
+
+			if (string.IsNullOrEmpty(date))
+			{
+				Console.Error.WriteLine($"Warning: Unable to extract date from OCR text '{dateText}'");
+				return null;
+			}
+
 			if (time == "" || date == "") return null;
 
 			if (DateTime.TryParseExact($"{date} {time}", "dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
@@ -67,12 +99,20 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		{
 			// keep "HH:MM"
 			var digits = new string(value.Where(ch => char.IsDigit(ch) || ch == ':').ToArray());
+
 			if (digits.Length >= 4 && digits.Contains(':'))
 			{
 				var parts = digits.Split(':');
 				if (parts.Length >= 2 && parts[0].Length <= 2 && parts[1].Length >= 2)
 					return $"{parts[0].PadLeft(2, '0')}:{parts[1].Substring(0, 2)}";
 			}
+
+			// For some reason, did not understand the :
+			if(digits.Length == 4)
+			{
+				return $"{digits[0]}{digits[1]}:{digits[2]}{digits[3]}";
+			}
+
 			return "";
 		}
 

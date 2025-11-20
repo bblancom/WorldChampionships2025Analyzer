@@ -55,7 +55,7 @@ namespace WorldChampionships2025Analyzer
 		{
 			Psm = Tesseract.PageSegMode.SingleLine,
 			Oem = Tesseract.EngineMode.LstmOnly,
-			Whitelist = "0123456789:-./R"
+			Whitelist = "0123456789:-./"
 		};
 
 		public OcrEngine OcrEngine { get; private set; }
