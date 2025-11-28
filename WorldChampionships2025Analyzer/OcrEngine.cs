@@ -5,12 +5,9 @@ namespace WorldChampionships2025Analyzer
 {
 	public class OcrEngine : IDisposable
 	{
-		private TesseractEngine _engine;
+		private readonly TesseractEngine _engine;
 
-		public OcrEngine(string tessDataPath)
-		{
-			_engine = new TesseractEngine(tessDataPath, "eng", EngineMode.LstmOnly);
-		}
+		public OcrEngine(string tessDataPath) => _engine = new TesseractEngine(tessDataPath, "eng", EngineMode.LstmOnly);
 
 		public (string Text, float Confidence) Read(Mat img, OcrPreset preset)
 		{

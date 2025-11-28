@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-public class StringApproximation
+﻿public class StringApproximation
 {
 	public StringApproximation() { }
 
@@ -54,6 +50,7 @@ public class StringApproximation
 		foreach (var candidate in candidates)
 		{
 			double similarity = CalculateSimilarity(input, candidate);
+
 			if (similarity > bestSimilarity)
 			{
 				bestSimilarity = similarity;
@@ -68,10 +65,9 @@ public class StringApproximation
 	public List<(string Country, double Similarity)> FindMatches(
 		string input, List<string> candidates, double threshold = 70.0)
 	{
-		return candidates
+		return [.. candidates
 			.Select(c => (Country: c, Similarity: CalculateSimilarity(input, c)))
 			.Where(x => x.Similarity >= threshold)
-			.OrderByDescending(x => x.Similarity)
-			.ToList();
+			.OrderByDescending(x => x.Similarity)];
 	}
 }

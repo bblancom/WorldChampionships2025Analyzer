@@ -5,35 +5,15 @@ namespace WorldChampionships2025Analyzer.Interpreters
 {
 	public class DateTimeInterpreter : InterpreterBase
 	{
-		public DateTimeInterpreter(Mat src, OcrEngine ocrEngine, int ringNumber = 1) : base(src, ocrEngine)
+		public DateTimeInterpreter(Mat src,
+								   OcrEngine ocrEngine,
+								   int ringNumber = 1) : base(src, ocrEngine, ringNumber)
 		{
-			Init(ringNumber);
+			RoiTime = InterpreterConfiguration.TimeRoi;
+			RoiDate = InterpreterConfiguration.DateRoi;
 		}
 
-		private void Init(int ringNumber)
-		{
-			// Set date & time ROI
-			switch (ringNumber)
-			{
-				case 1:
-					RoiDate = new Rect(140, 920, 110, 40);
-					RoiTime = new Rect(150, 900, 90, 30);
-					break;
-				case 6:
-					// No Datetime
-					break;
-				case 7:
-					RoiDate = new Rect(140, 930, 115, 25);
-					RoiTime = new Rect(150, 900, 95, 25);
-					break;
-				default:
-					RoiDate = new Rect(140, 920, 110, 40);
-					RoiTime = new Rect(150, 900, 90, 30);
-					break;
-			}
-		}
-
-		private Rect RoiTime { get; set; }
+		private Rect? RoiTime { get; set; }
 		private Rect? RoiDate { get; set; }
 
 		public DateTime? ParseDateTime()
@@ -41,7 +21,7 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			// Means there is no value for this specific ring
 			if (!RoiDate.HasValue) return DefaultDatetime;
 
-			var rTime = ScaleFromBase(RoiTime, SourceX, SourceY, Source.Size());
+			var rTime = ScaleFromBase(RoiTime.Value, SourceX, SourceY, Source.Size());
 			var rDate = ScaleFromBase(RoiDate.Value, SourceX, SourceY, Source.Size());
 			var timeMat = new Mat(Source, rTime);
 			var dateMat = new Mat(Source, rDate);
@@ -52,8 +32,8 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			//Cv2.ImShow("Debug", dateMat);
 			//Cv2.WaitKey(0);
 
-			var timeText = OcrEngine.Read(timeMat, OcrDigits).Text;
-			var dateText = OcrEngine.Read(dateMat, OcrDigits).Text;
+			var timeText = OcrEngine.Read(timeMat, Configuration.OcrConfiguration.OcrDigits).Text;
+			var dateText = OcrEngine.Read(dateMat, Configuration.OcrConfiguration.OcrDigits).Text;
 
 			if (string.IsNullOrEmpty(timeText))
 			{
@@ -83,7 +63,7 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				return null;
 			}
 
-			if (time == "" || date == "") return null;
+			if (string.IsNullOrEmpty(time) || string.IsNullOrEmpty(date)) return null;
 
 			if (DateTime.TryParseExact($"{date} {time}", "dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
 				return dt;
@@ -104,13 +84,18 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			{
 				var parts = digits.Split(':');
 				if (parts.Length >= 2 && parts[0].Length <= 2 && parts[1].Length >= 2)
-					return $"{parts[0].PadLeft(2, '0')}:{parts[1].Substring(0, 2)}";
+					return $"{parts[0].PadLeft(2, '0')}:{parts[1][..2]}";
 			}
 
 			// For some reason, did not understand the :
-			if(digits.Length == 4)
+			if (digits.Length == 4)
 			{
 				return $"{digits[0]}{digits[1]}:{digits[2]}{digits[3]}";
+			}
+
+			if (digits.Length == 3)
+			{
+				return $"{digits[0]}:{digits[1]}{digits[2]}";
 			}
 
 			return "";
@@ -120,14 +105,17 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		{
 			// keep "DD.MM.YYYY" (strip trailing dot)
 			var digits = new string(value.Where(ch => char.IsDigit(ch) || ch == '.').ToArray());
-			if (digits.Count(ch => ch == '.') >= 2)
+
+			if (digits.Count(ch => ch == '.') == 2)
 			{
 				var segs = digits.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
 				if (segs.Length >= 3 && segs[0].Length <= 2 && segs[1].Length <= 2 && segs[2].Length >= 4)
 				{
-					return $"{segs[0].PadLeft(2, '0')}.{segs[1].PadLeft(2, '0')}.{segs[2].Substring(0, 4)}";
+					return $"{segs[0].PadLeft(2, '0')}.{segs[1].PadLeft(2, '0')}.{segs[2][..4]}";
 				}
 			}
+
 			return "";
 		}
 	}

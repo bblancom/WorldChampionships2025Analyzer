@@ -1,14 +1,17 @@
 ﻿using OpenCvSharp;
 using Microsoft.Extensions.Configuration;
+using WorldChampionships2025Analyzer.Configuration;
+using WorldChampionships2025Analyzer.Static_data;
 
 namespace WorldChampionships2025Analyzer
 {
-	public class InterpreterBase
+    public class InterpreterBase
 	{
-		public InterpreterBase(Mat src, OcrEngine ocrEngine)
+		public InterpreterBase(Mat src, OcrEngine ocrEngine, int ringNumber = 1)
 		{
 			Source = src;
 			OcrEngine = ocrEngine;
+			InterpreterConfiguration = new RoiConfiguration(ringNumber);
 			Init();
 		}
 
@@ -26,39 +29,28 @@ namespace WorldChampionships2025Analyzer
 
 				if (!string.IsNullOrEmpty(value))
 					DefaultDatetime = DateTime.ParseExact(value, "yyyy-MM-dd", null);
+
+				TessDataPath = config["TessDataPath"] ?? "./tessdata";
+
+				BaseWidth = int.Parse(config["BaseWidth"]);
+				BaseHeight = int.Parse(config["BaseHeight"]);
 			}
 		}
 
-		// Tesseract data path (put tessdata folder here). You can use an absolute path.
-		public string TessDataPath => "C:\\Users\\bruno\\source\\repos\\WorldChampionships2025Analyzer\\WorldChampionships2025Analyzer\\bin\\Debug\\net8.0\\tesssdata"; // ensure tessdata/eng.traineddata exists
+		public string TessDataPath { get; private set; } // ensure tessdata/eng.traineddata exists
 
 		public Mat Source { get; private set; }
 
-		// Image resolution you capture from (example: 1920x1080). ROIs below assume 1920x1080.
-		// If your images differ, adjust ROIs or scale them using ScaleFromBase function.
-		const int BaseW = 1920;
-		const int BaseH = 1080;
+		public int BaseWidth { get; private set; }
+
+		public int BaseHeight { get; private set; }
 
 		// Scale ROIs if the image resolution differs from base
-		public double SourceX => Source.Width / (double)BaseW;
-		public double SourceY => Source.Height / (double)BaseH;
-
-		// OCR presets
-		public OcrPreset OcrDefault => new OcrPreset
-		{
-			Psm = Tesseract.PageSegMode.SingleLine,
-			Oem = Tesseract.EngineMode.LstmOnly,
-			Whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,-:/0123456789"
-		};
-
-		public OcrPreset OcrDigits => new OcrPreset
-		{
-			Psm = Tesseract.PageSegMode.SingleLine,
-			Oem = Tesseract.EngineMode.LstmOnly,
-			Whitelist = "0123456789:-./"
-		};
+		public double SourceX => Source.Width / (double) BaseWidth;
+		public double SourceY => Source.Height / (double) BaseHeight;
 
 		public OcrEngine OcrEngine { get; private set; }
+		public RoiConfiguration InterpreterConfiguration { get; }
 		public DateTime DefaultDatetime { get; private set; }
 
 		public Rect ScaleFromBase(Rect r, double sx, double sy, Size imgSize)
@@ -67,6 +59,7 @@ namespace WorldChampionships2025Analyzer
 			int y = Clamp((int)Math.Round(r.Y * sy), 0, imgSize.Height - 1);
 			int w = Clamp((int)Math.Round(r.Width * sx), 1, imgSize.Width - x);
 			int h = Clamp((int)Math.Round(r.Height * sy), 1, imgSize.Height - y);
+
 			return new Rect(x, y, w, h);
 		}
 

@@ -5,18 +5,13 @@ namespace WorldChampionships2025Analyzer.Interpreters
 {
 	public class DifferentialsInterpreter : InterpreterBase
 	{
-		public DifferentialsInterpreter(Mat src, OcrEngine ocrEngine, int ringNumber) : base(src, ocrEngine)
+		public DifferentialsInterpreter(Mat src, OcrEngine ocrEngine, int ringNumber) : base(src, ocrEngine, ringNumber)
 		{
-			RingNumber = ringNumber;
 		}
-
-		private Mat DifferentialsPannel { get; set; }
-		private int RingNumber { get; }
 
 		public int[] ReadStackDiffs()
 		{
-			var roiStackPanel = GetRoiStackPanelByRing();   // the 4 columns of stacks (SPORTDATA pills)
-			var rStack = ScaleFromBase(roiStackPanel, SourceX, SourceY, Source.Size());
+			var rStack = ScaleFromBase(InterpreterConfiguration.DifferentialsPanelRoi, SourceX, SourceY, Source.Size());
 			var stackMat = new Mat(Source, rStack);
 
 			//Cv2.ImShow("Debug", stackMat);
@@ -36,8 +31,8 @@ namespace WorldChampionships2025Analyzer.Interpreters
 
 			// Blue
 			var blueMask = new Mat();
-			Scalar lowerb = new Scalar(90, 60, 50);
-			Scalar upperb = new Scalar(115, 255, 255);
+			var lowerb = new Scalar(90, 60, 50);
+			var upperb = new Scalar(115, 255, 255);
 			Cv2.InRange(hsv, lowerb, upperb, blueMask);
 
 			// Clean masks
@@ -54,16 +49,15 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			//Cv2.ImShow("Debug", redMask);
 			//Cv2.WaitKey(0);
 
-			var rects = GetConfigByRing();
 			var diffs = new List<int>();
 
-			foreach (var rect in rects)
+			foreach (var rect in InterpreterConfiguration.UmpiresDifferentialsRois)
 			{
 				//Cv2.ImShow("Debug", stackMat[rect]);
 				//Cv2.WaitKey(0);
 
-				var redScoreRect = GetRedScoreRectByRing(rect);
-				var blueScoreRect = GetBlueScoreRectByRing(rect);
+				var redScoreRect = InterpreterConfiguration.GetRedScoreRectByRing(rect);
+				var blueScoreRect = InterpreterConfiguration.GetBlueScoreRectByRing(rect);
 
 				//Cv2.ImShow("Debug", redMask[redScoreRect]);
 				//Cv2.WaitKey(0);
@@ -74,7 +68,7 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				var redCount = CountHorizontalBars(redMask[redScoreRect]);
 				var blueCount = CountHorizontalBars(blueMask[blueScoreRect]);
 
-				if(redCount > 0 && blueCount > 0)
+				if (redCount > 0 && blueCount > 0)
 				{
 					// Something is wrong
 					Console.Error.WriteLine("Error counting scores");
@@ -86,77 +80,6 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			return [.. diffs];
 		}
 
-		private Rect GetBlueScoreRectByRing(Rect rect)
-		{
-			switch (RingNumber)
-			{
-				case 6:
-					return new Rect(rect.X, 45, 63, 40);
-				case 7:
-					return new Rect(rect.X, 45, 63, 40);
-				default:
-					return new Rect(rect.X, 49, 63, 40);
-			}
-		}
-
-		private Rect GetRedScoreRectByRing(Rect rect)
-		{
-			switch (RingNumber)
-			{
-				default:
-					return new Rect(rect.X, 0, 63, 40);
-			}
-		}
-
-		private Rect GetRoiStackPanelByRing()
-		{
-			switch (RingNumber)
-			{
-				case 1:
-					return new Rect(1640, 900, 450, 90);
-				case 6:
-					return new Rect(1640, 920, 450, 90);
-				default:
-					return new Rect(1640, 900, 450, 90);
-			}
-		}
-
-		private Rect[] GetConfigByRing()
-		{
-			switch (RingNumber)
-			{
-				case 1:
-					return [
-							new Rect(0, 0, 68, 90),
-							new Rect(69, 0, 68, 90),
-							new Rect(137, 0, 68, 90),
-							new Rect(205, 0, 68, 90),
-						];
-				case 6:
-					return [
-							new Rect(0, 0, 68, 85),
-							new Rect(69, 0, 68, 90),
-							new Rect(137, 0, 68, 90),
-							new Rect(205, 0, 68, 90),
-						];
-				case 7:
-					return [
-							new Rect(0, 0, 68, 90),
-							new Rect(69, 0, 60, 90),
-							new Rect(137, 0, 60, 90),
-							new Rect(200, 0, 60, 90),
-						];
-				default:
-					return [
-							new Rect(0, 0, 68, 90),
-							new Rect(69, 0, 68, 90),
-							new Rect(137, 0, 68, 90),
-							new Rect(205, 0, 68, 90),
-						];
-			}
-
-		}
-
 		private int CountHorizontalBars(Mat mask)
 		{
 			// Count connected components that look like horizontal bars
@@ -165,13 +88,12 @@ namespace WorldChampionships2025Analyzer.Interpreters
 			Cv2.Threshold(mask, mask, 127, 255, ThresholdTypes.Binary);
 			Cv2.FindContours(mask, out var contours, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
 
-			foreach(var contour in contours)
+			foreach (var contour in contours)
 			{
 				var height = Cv2.BoundingRect(contour).Height;
 				var width = Cv2.BoundingRect(contour).Width;
 
-				//if(height < width)
-					rectangleHeightSum += height;
+				rectangleHeightSum += height;
 			}
 
 			if (rectangleHeightSum >= 27 && rectangleHeightSum <= 35)
@@ -199,10 +121,12 @@ namespace WorldChampionships2025Analyzer.Interpreters
 
 		public (bool blueWin, bool redWin) InferWinner(int[] diffs)
 		{
-			int blue = diffs.Count(d => d < 0);
-			int red = diffs.Count(d => d > 0);
+			var blue = diffs.Count(d => d < 0);
+			var red = diffs.Count(d => d > 0);
+
 			if (blue > red) return (true, false);
 			if (red > blue) return (false, true);
+
 			return (false, false);
 		}
 	}
