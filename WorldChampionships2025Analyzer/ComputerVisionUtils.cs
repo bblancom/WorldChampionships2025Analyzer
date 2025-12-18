@@ -13,11 +13,11 @@ namespace WorldChampionships2025Analyzer
 		public ComputerVisionUtils(Mat src, OcrEngine ocr, string category)
 		{
 			RingInterpreter = new RingInterpreter(src, ocr);
-			BlueCompetitorInterpreter = new FighterBoxInterpreter(src, ocr, Competitor.Blue);
-			RedCompetitorInterpreter = new FighterBoxInterpreter(src, ocr, Competitor.Red);
+			BlueCompetitorInterpreter = new FighterBoxInterpreter(src, ocr, Competitor.Blue, MatchRing);
+			RedCompetitorInterpreter = new FighterBoxInterpreter(src, ocr, Competitor.Red, MatchRing);
 			DifferentialsInterpreter = new DifferentialsInterpreter(src, ocr, MatchRing);
 			DateTimeInterpreter = new DateTimeInterpreter(src, ocr, MatchRing);
-			FoulsWarningsInterpreter = new FoulsWarningsInterpreter(src, ocr);
+			FoulsWarningsInterpreter = new FoulsWarningsInterpreter(src, ocr, MatchRing);
 			MatchRoundInterpreter = new MatchRoundInterpreter(src, ocr);
 			Category = category;
 		}

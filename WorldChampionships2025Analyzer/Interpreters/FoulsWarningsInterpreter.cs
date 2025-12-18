@@ -1,5 +1,6 @@
 ﻿using OpenCvSharp;
 using Tesseract;
+using WorldChampionships2025Analyzer.Configuration;
 
 namespace WorldChampionships2025Analyzer.Interpreters
 {
@@ -40,18 +41,12 @@ namespace WorldChampionships2025Analyzer.Interpreters
 
 			if (competitor == Competitor.Red)
 			{
-				var lowerRed = new Scalar(0, 100, 100);
-				var lowerRed2 = new Scalar(160, 100, 100);
-
-				var upperRed = new Scalar(10, 255, 255);
-				var upperRed2 = new Scalar(180, 255, 255);
-
 				using var mask = new Mat();
 				using var mask2 = new Mat();
 				using var finalMask = new Mat();
 
-				Cv2.InRange(hsv, lowerRed, upperRed, mask);
-				Cv2.InRange(hsv, lowerRed2, upperRed2, mask2);
+				Cv2.InRange(hsv, InterpreterConfiguration.LowerRedScalar, InterpreterConfiguration.UpperRedScalar, mask);
+				Cv2.InRange(hsv, InterpreterConfiguration.LowerRedScalar2, InterpreterConfiguration.UpperRedScalar2, mask2);
 
 				Cv2.BitwiseOr(mask, mask2, finalMask);
 				Cv2.BitwiseNot(finalMask, mask);
@@ -59,25 +54,27 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				//Cv2.ImShow("debug", mask);
 				//Cv2.WaitKey(0);
 
-				var (text, confidence) = OcrEngine.Read(mask, new OcrPreset { Psm = PageSegMode.SingleChar, Whitelist = "0123456789-" });
-				var retVal = text.Contains('-') || string.IsNullOrEmpty(text) ? "0" : text.TrimEnd();
+				var (text, confidence) = OcrEngine.Read(mask, OcrConfiguration.OcrSingleCharDigits);
+				var retVal = text.Contains('-') || string.IsNullOrEmpty(text) 
+					       ? "0" 
+						   : text.TrimEnd();
 
 				return retVal;
 			}
 			else
 			{
 				using var mask = new Mat();
-				var lower = new Scalar(85, 80, 120);
-				var upper = new Scalar(105, 255, 255);
 
-				Cv2.InRange(hsv, lower, upper, mask);
+				Cv2.InRange(hsv, InterpreterConfiguration.LowerBlueScalar, InterpreterConfiguration.UpperBlueScalar, mask);
 				Cv2.BitwiseNot(mask, mask);
 
 				//Cv2.ImShow("debug", mask);
 				//Cv2.WaitKey(0);
 
-				var (text, confidence) = OcrEngine.Read(mask, new OcrPreset { Psm = PageSegMode.SingleChar, Whitelist = "0123456789-" });
-				var retVal = text.Contains('-') || string.IsNullOrEmpty(text) ? "0" : text.TrimEnd();
+				var (text, confidence) = OcrEngine.Read(mask, OcrConfiguration.OcrSingleCharDigits);
+				var retVal = text.Contains('-') || string.IsNullOrEmpty(text) 
+					       ? "0" 
+						   : text.TrimEnd();
 
 				return retVal;
 			}

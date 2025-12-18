@@ -16,5 +16,10 @@
 			Whitelist = "0123456789:-./"
 		};
 
+		public static OcrPreset OcrSingleCharDigits => new()
+		{
+			Psm = Tesseract.PageSegMode.SingleChar,
+			Whitelist = "0123456789-"
+		};
 	}
 }

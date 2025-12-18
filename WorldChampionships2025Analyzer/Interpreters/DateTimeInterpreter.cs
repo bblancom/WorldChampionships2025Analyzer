@@ -104,8 +104,9 @@ namespace WorldChampionships2025Analyzer.Interpreters
 		private string ExtractDate(string value)
 		{
 			// keep "DD.MM.YYYY" (strip trailing dot)
-			var digits = new string(value.Where(ch => char.IsDigit(ch) || ch == '.').ToArray());
+			var digits = new string([.. value.Where(ch => char.IsDigit(ch) || ch == '.')]).TrimEnd('.');
 
+			// TODO: Rework feature using regexp
 			if (digits.Count(ch => ch == '.') == 2)
 			{
 				var segs = digits.Split('.', StringSplitOptions.RemoveEmptyEntries);

@@ -6,7 +6,13 @@ namespace WorldChampionships2025Analyzer.Configuration
     {
         private readonly int _ringNumber;
 
-        public RoiConfiguration(int ringNumber) => _ringNumber = ringNumber;
+		/// <summary>
+		/// Constructor for RoiConfiguration.
+		/// </summary>
+		/// <param name="ringNumber">
+        /// Ring or area id number.
+        /// </param>
+		public RoiConfiguration(int ringNumber) => _ringNumber = ringNumber;
 
         #region Region of interest public properties
         public Rect BlueCompetitorInfoRoi => GetBlueRoiByRingNumber();
@@ -24,7 +30,8 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                _ => new Rect(rect.X, 0, 63, 40),
+                2 => new Rect(rect.X, 0, 63, 35),
+				_ => new Rect(rect.X, 0, 63, 40),
             };
         }
 
@@ -43,16 +50,24 @@ namespace WorldChampionships2025Analyzer.Configuration
         public Rect RoiFoulsRed => GetRoiFoulsRedByRing();
         public Rect RoiFoulsBlue => GetRoiFoulsBlueByRing();
 
-        #endregion
+		public Scalar LowerRedScalar => new(0, 100, 100);
+        public Scalar LowerRedScalar2 => new(160, 100, 100);
+		public Scalar UpperRedScalar => new(10, 255, 255);
+		public Scalar UpperRedScalar2 => new(180, 255, 255);
 
-        #region Private methods for ROIs
-        /// <summary>
-        /// Get blue competitor info region of interest.
-        /// </summary>
-        /// <returns>
-        /// Rect for roi.
-        /// </returns>
-        private Rect GetBlueRoiByRingNumber()
+        public Scalar LowerBlueScalar => new(85, 80, 120);
+        public Scalar UpperBlueScalar => new(105, 255, 255);
+
+		#endregion
+
+		#region Private methods for ROIs
+		/// <summary>
+		/// Get blue competitor info region of interest.
+		/// </summary>
+		/// <returns>
+		/// Rect for roi.
+		/// </returns>
+		private Rect GetBlueRoiByRingNumber()
         {
             return _ringNumber switch
             {
@@ -86,7 +101,8 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                1 => new Rect(1640, 900, 450, 90),
+                1 => new Rect(1600, 900, 450, 90),
+                2 => new Rect(1620, 890, 450, 90),
                 6 => new Rect(1640, 920, 450, 90),
                 _ => new Rect(1640, 900, 450, 90),
             };
@@ -108,7 +124,13 @@ namespace WorldChampionships2025Analyzer.Configuration
                             new Rect(137, 0, 68, 90),
                             new Rect(205, 0, 68, 90),
                         ],
-                6 => [
+				2 => [
+					        new Rect(0, 0, 68, 90),
+							new Rect(74, 0, 68, 90),
+							new Rect(143, 0, 68, 90),
+							new Rect(213, 0, 65, 90),
+						],
+				6 => [
                             new Rect(0, 0, 68, 85),
                             new Rect(69, 0, 68, 90),
                             new Rect(137, 0, 68, 90),
@@ -131,45 +153,34 @@ namespace WorldChampionships2025Analyzer.Configuration
 
         private Rect? GetTimeRoiByRing()
         {
-            switch (_ringNumber)
-            {
-                case 1:
-                    return new Rect(150, 900, 90, 30);
-                case 2:
-                    return new Rect(150, 905, 60, 30);
-                case 6:
-                    // No Datetime
-                    return null;
-                case 7:
-                    return new Rect(150, 900, 95, 25);
-                default:
-                    return new Rect(150, 900, 90, 30);
-            }
-        }
+			return _ringNumber switch
+			{
+				1 => (Rect?)new Rect(150, 900, 90, 30),
+				2 => (Rect?)new Rect(150, 905, 60, 30),
+				6 => null,// No Datetime
+				7 => (Rect?)new Rect(150, 900, 95, 25),
+				_ => (Rect?)new Rect(150, 900, 90, 30),
+			};
+		}
 
         private Rect? GetDateRoiByRing()
         {
-            switch (_ringNumber)
-            {
-                case 1:
-                    return new Rect(140, 920, 110, 40);
-                case 2:
-                    return new Rect(140, 930, 110, 40);
-                case 6:
-                    // No Datetime
-                    return null;
-                case 7:
-                    return new Rect(140, 930, 115, 25);
-                default:
-                    return new Rect(140, 920, 110, 40);
-            }
-        }
+			return _ringNumber switch
+			{
+				1 => (Rect?)new Rect(140, 920, 110, 40),
+				2 => (Rect?)new Rect(140, 930, 110, 40),
+				6 => null,// No Datetime
+				7 => (Rect?)new Rect(140, 930, 115, 25),
+				_ => (Rect?)new Rect(140, 920, 110, 40),
+			};
+		}
 
         private Rect GetRoiWarningsRedByRing()
         {
             return _ringNumber switch
             {
-                _ => new(1590, 1000, 50, 35),
+                2 => new (1530, 990, 50, 35),
+				_ => new(1590, 1000, 50, 35),
             };
         }
 
@@ -177,7 +188,8 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                7 => new(1590, 1000, 50, 25),
+                2 => new (1530, 1035, 50, 35),
+				7 => new(1590, 1000, 50, 25),
                 _ => new(1590, 1050, 50, 35),
             };
         }
@@ -186,7 +198,8 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                _ => new(1880, 1000, 50, 35),
+                2 => new (1830, 990, 50, 35),
+				_ => new(1880, 1000, 50, 35),
             };
         }
 
@@ -194,7 +207,8 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                7 => new(1880, 1045, 50, 25),
+                2 => new (1830, 1035, 50, 35),
+				7 => new(1880, 1045, 50, 25),
                 _ => new(1880, 1045, 50, 35),
             };
         }

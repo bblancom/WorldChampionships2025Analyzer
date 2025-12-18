@@ -96,7 +96,8 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				rectangleHeightSum += height;
 			}
 
-			if (rectangleHeightSum >= 27 && rectangleHeightSum <= 35)
+			//if (rectangleHeightSum >= 27 && rectangleHeightSum <= 35)
+			if (rectangleHeightSum >= 27)
 			{
 				return 4;
 			}
