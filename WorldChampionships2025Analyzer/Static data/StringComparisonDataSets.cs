@@ -12,7 +12,19 @@
 			"SLOVAKIA","HUNGARY","ROMANIA","BULGARIA","GEORGIA","KAZAKHSTAN","UZBEKISTAN","MOLDOVA", "MALAYSIA", "CHINESE TAIPEI", "CHILE", "INDIVIDUAL NEUTRAL ATHLETES"
 		};
 
-		public static HashSet<string> NameSet => new(StringComparer.OrdinalIgnoreCase)
+		public static HashSet<string> NameSet
+		{
+			get
+			{
+				var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				set.UnionWith(SeniorCompetitorsNameSet);
+				set.UnionWith(JuniorCompetitorsNameSet);
+				set.UnionWith(PreJuniorCompetitorsNameSet);
+				return set;
+			}
+		}
+
+		public static HashSet<string> SeniorCompetitorsNameSet => new(StringComparer.OrdinalIgnoreCase)
 		{
 			"Murillo Diego","Spina Augusto","Toyama Sogo","Lema Efrata","Tolstogan Valeriu","Kiss Levente","Pena Gonzalo",
 			"Thapa Magar Niresh","Lin Chun Kit","Almeida Lautaro","Bernstein Daniel","Talhaoui Kabil Yassine","Martin Finn",
@@ -60,6 +72,16 @@
 			"Schmidt Victoria","Bordiez Aldana","Stetinova Eva","Reszka Klaudia","Vrinat Alice","Kanka Filippa","Beaudoin Caroline","Takahashi Mika","Makoviichuk Sofiia",
 			"Leppanen Jasmin","Domene Valverde Laura","Amores Ivana","Shan Meng Hui","Becsi Nikolett","Fabian Eszter","Acosta Ailen","Moreno Pomares Ana Maria","Pigarova Anna",
 			"Li Selma","Shibasaki Rio","Lagace Genevieve","Planko Veronika","Cichon Martyna","Singleton Jaimie","Reshetnikova Alena"
+		};
+
+		public static HashSet<string> JuniorCompetitorsNameSet => new(StringComparer.OrdinalIgnoreCase)
+		{
+			
+		};
+
+		public static HashSet<string> PreJuniorCompetitorsNameSet => new(StringComparer.OrdinalIgnoreCase)
+		{
+
 		};
 
 		public static Dictionary<string, string> FederationSet => new(StringComparer.OrdinalIgnoreCase)
