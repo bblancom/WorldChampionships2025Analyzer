@@ -2,7 +2,7 @@
   "profiles": {
     "WorldChampionships2025Analyzer": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\bruno\\OneDrive\\Documentos\\Fight analytics wrapper\\Input\\ToProcess\" \"Individual Female Sparring up to 50 kg\""
+      "commandLineArgs": "\"/Users/bblancom/Repos/WorldChampionships2025Analyzer/Pics/Male up to 87kg\" \"Individual Male Sparring over 81 to 87 kg\""
     }
   }
 }

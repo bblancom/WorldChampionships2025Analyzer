@@ -55,6 +55,9 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				//Cv2.WaitKey(0);
 
 				var (text, confidence) = OcrEngine.Read(mask, OcrConfiguration.OcrSingleCharDigits);
+
+				if (confidence == 0) return "ERROR";
+				
 				var retVal = text.Contains('-') || string.IsNullOrEmpty(text) 
 					       ? "0" 
 						   : text.TrimEnd();

@@ -11,9 +11,9 @@ namespace WorldChampionships2025Analyzer
 
 		public (string Text, float Confidence) Read(Mat img, OcrPreset preset)
 		{
-			using var bmp = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(img);
-			using var pix = PixConverter.ToPix(bmp);
-
+			Cv2.ImEncode(".png", img, out byte[] pngBytes);
+			using var pix = Pix.LoadFromMemory(pngBytes);
+			
 			_engine.DefaultPageSegMode = preset.Psm;
 
 			if (!string.IsNullOrEmpty(preset.Whitelist))
@@ -22,7 +22,7 @@ namespace WorldChampionships2025Analyzer
 			}
 
 			using var page = _engine.Process(pix);
-			var text = page.GetText() ?? "";
+			var text = page.GetText();
 			var conf = page.GetMeanConfidence();
 
 			return (text, conf);

@@ -113,7 +113,7 @@ namespace WorldChampionships2025Analyzer.Interpreters
 				var (name, similarityName) = stringApproximationUtils.FindBestMatch(lines[i], [.. StringComparisonDataSets.NameSet]);
 
 				// Not so high similarity, after all should be quite accurate to pick one
-				if (similarityName > 40)
+				if (similarityName > 60)
 				{
 					Name = NormalizeName(name);
 					break;

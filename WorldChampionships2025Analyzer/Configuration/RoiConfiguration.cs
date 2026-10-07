@@ -1,18 +1,28 @@
 ﻿using OpenCvSharp;
+using WorldChampionships2025Analyzer.Enums;
 
 namespace WorldChampionships2025Analyzer.Configuration
 {
     public class RoiConfiguration
     {
         private readonly int _ringNumber;
+        
+        private readonly Tournament _tournament;
 
-		/// <summary>
-		/// Constructor for RoiConfiguration.
-		/// </summary>
-		/// <param name="ringNumber">
+        /// <summary>
+        /// Constructor for RoiConfiguration.
+        /// </summary>
+        /// <param name="ringNumber">
         /// Ring or area id number.
         /// </param>
-		public RoiConfiguration(int ringNumber) => _ringNumber = ringNumber;
+        /// <param name="tournament">
+        /// Tournament config.
+        /// </param>
+        public RoiConfiguration(int ringNumber, Tournament tournament)
+        {
+	        _ringNumber = ringNumber;
+	        _tournament = tournament;
+        }
 
         #region Region of interest public properties
         public Rect BlueCompetitorInfoRoi => GetBlueRoiByRingNumber();
@@ -30,6 +40,7 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(rect.X, 0, 63, 35),
                 2 => new Rect(rect.X, 0, 63, 35),
 				_ => new Rect(rect.X, 0, 63, 40),
             };
@@ -71,6 +82,7 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(725, 980, 450, 130),
                 2 => new Rect(750, 960, 480, 150),
                 _ => new Rect(750, 960, 480, 150),
             };
@@ -86,6 +98,7 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(60, 980, 450, 130),
                 2 => new Rect(60, 960, 450, 150),
                 _ => new Rect(60, 960, 450, 150),
             };
@@ -101,7 +114,8 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                1 => new Rect(1600, 900, 450, 90),
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(1370, 880, 270, 90),
+                1 when _tournament == Tournament.WorldChampionship2025 => new Rect(1600, 900, 450, 90),
                 2 => new Rect(1620, 890, 450, 90),
                 6 => new Rect(1640, 920, 450, 90),
                 _ => new Rect(1640, 900, 450, 90),
@@ -118,7 +132,13 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                1 => [
+	            1 when _tournament == Tournament.WorldCup2026 => [
+		            new Rect(0, 0, 67, 90),
+		            new Rect(68, 0, 67, 90),
+		            new Rect(135, 0, 67, 90),
+		            new Rect(203, 0, 67, 90),
+	            ],
+                1 when _tournament == Tournament.WorldChampionship2025 => [
                             new Rect(0, 0, 68, 90),
                             new Rect(69, 0, 68, 90),
                             new Rect(137, 0, 68, 90),
@@ -179,8 +199,9 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                2 => new (1530, 990, 50, 35),
-				_ => new(1590, 1000, 50, 35),
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(1560, 990, 50, 35),
+                2 => new Rect(1530, 990, 50, 35),
+				_ => new Rect(1590, 1000, 50, 35),
             };
         }
 
@@ -188,9 +209,10 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                2 => new (1530, 1035, 50, 35),
-				7 => new(1590, 1000, 50, 25),
-                _ => new(1590, 1050, 50, 35),
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(1560, 1040, 50, 35),
+                2 => new Rect(1530, 1035, 50, 35),
+				7 => new Rect(1590, 1000, 50, 25),
+                _ => new Rect(1590, 1050, 50, 35),
             };
         }
 
@@ -198,8 +220,9 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                2 => new (1830, 990, 50, 35),
-				_ => new(1880, 1000, 50, 35),
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(1850, 990, 50, 35),
+                2 => new Rect(1830, 990, 50, 35),
+				_ => new Rect(1880, 1000, 50, 35),
             };
         }
 
@@ -207,9 +230,10 @@ namespace WorldChampionships2025Analyzer.Configuration
         {
             return _ringNumber switch
             {
-                2 => new (1830, 1035, 50, 35),
-				7 => new(1880, 1045, 50, 25),
-                _ => new(1880, 1045, 50, 35),
+	            1 when _tournament == Tournament.WorldCup2026 => new Rect(1850, 1040, 50, 35),
+                2 => new Rect(1830, 1035, 50, 35),
+				7 => new Rect(1880, 1045, 50, 25),
+                _ => new Rect(1880, 1045, 50, 35),
             };
         }
 

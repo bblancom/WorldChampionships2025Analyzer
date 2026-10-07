@@ -103,13 +103,14 @@ namespace WorldChampionships2025Analyzer.Interpreters
 
 		private string ExtractDate(string value)
 		{
+			var dateSeparator = value.Contains('.') ? '.' : '/';
 			// keep "DD.MM.YYYY" (strip trailing dot)
-			var digits = new string([.. value.Where(ch => char.IsDigit(ch) || ch == '.')]).TrimEnd('.');
+			var digits = new string([.. value.Where(ch => char.IsDigit(ch) || ch == dateSeparator)]).TrimEnd('.');
 
 			// TODO: Rework feature using regexp
-			if (digits.Count(ch => ch == '.') == 2)
+			if (digits.Count(ch => ch == dateSeparator) == 2)
 			{
-				var segs = digits.Split('.', StringSplitOptions.RemoveEmptyEntries);
+				var segs = digits.Split(dateSeparator, StringSplitOptions.RemoveEmptyEntries);
 
 				if (segs.Length >= 3 && segs[0].Length <= 2 && segs[1].Length <= 2 && segs[2].Length >= 4)
 				{

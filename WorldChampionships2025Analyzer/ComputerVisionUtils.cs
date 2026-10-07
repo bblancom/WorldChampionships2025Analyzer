@@ -41,26 +41,30 @@ namespace WorldChampionships2025Analyzer
 			// We have to identify ring number first in order to set all configurations based on that...
 			var (blueWin, redWin) = MatchWinnerLoser;
 
+			var blueCompetitor = new CompetitorInfo()
+			{
+				Name = BlueCompetitorInterpreter.Name,
+				Country = BlueCompetitorInterpreter.Country,
+				Warnings = FoulsWarningsInterpreter.WarningsBlue,
+				Fouls = FoulsWarningsInterpreter.FoulsBlue,
+				IsWinner = blueWin ? "Yes" : (redWin ? "No" : "Draw"),
+			};
+
+			var redCompetitor = new CompetitorInfo()
+			{
+				Name = RedCompetitorInterpreter.Name,
+				Country = RedCompetitorInterpreter.Country,
+				Warnings = FoulsWarningsInterpreter.WarningsRed,
+				Fouls = FoulsWarningsInterpreter.FoulsRed,
+				IsWinner = redWin ? "Yes" : (blueWin ? "No" : "Draw"),
+			};
+			
 			var retVal = new MatchData()
 			{
 				Datetime = MatchDateTime?.ToString("yyyy-MM-dd HH:mm") ?? "",
 				Ring = MatchRing,
-				BlueCompetitor = new CompetitorInfo()
-				{
-					Name = BlueCompetitorInterpreter.Name,
-					Country = BlueCompetitorInterpreter.Country,
-					Warnings = FoulsWarningsInterpreter.WarningsBlue,
-					Fouls = FoulsWarningsInterpreter.FoulsBlue,
-					IsWinner = blueWin ? "Yes" : (redWin ? "No" : "Draw"),
-				},
-				RedCompetitor = new CompetitorInfo()
-				{
-					Name = RedCompetitorInterpreter.Name,
-					Country = RedCompetitorInterpreter.Country,
-					Warnings = FoulsWarningsInterpreter.WarningsRed,
-					Fouls = FoulsWarningsInterpreter.FoulsRed,
-					IsWinner = redWin ? "Yes" : (blueWin ? "No" : "Draw"),
-				},
+				BlueCompetitor = blueCompetitor,
+				RedCompetitor = redCompetitor,
 				Category = Category,
 				Round = MatchRound,
 				TournamentRound = "FirstRound?",

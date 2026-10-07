@@ -11,7 +11,7 @@ class Program
 	const string OutputCsv = "sparring_results.csv";
 
 	// Tesseract data path (put tessdata folder here). You can use an absolute path.
-	static readonly string TessDataPath = "C:\\Users\\bruno\\source\\repos\\WorldChampionships2025Analyzer\\WorldChampionships2025Analyzer\\bin\\Debug\\net8.0\\tesssdata"; // ensure tessdata/eng.traineddata exists
+	static readonly string TessDataPath = "/Users/bblancom/Repos/WorldChampionships2025Analyzer/WorldChampionships2025Analyzer/tesssdata"; // ensure tessdata/eng.traineddata exists
 
 	// ============================
 	// MAIN

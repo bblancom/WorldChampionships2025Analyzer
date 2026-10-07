@@ -9,7 +9,8 @@
 			"CANADA","UNITED STATES","USA","ENGLAND","SCOTLAND","UKRAINE","POLAND","SWEDEN","PARAGUAY","WALES",
 			"GERMANY","NORWAY","FINLAND","IRELAND","SPAIN","ITALY","FRANCE","KOREA","ARGENTINA","COLOMBIA","BOSNIA AND HERZEGOVINA",
 			"BRAZIL","MEXICO","AUSTRALIA","NEW ZEALAND","NETHERLANDS","BELGIUM","CZECH REPUBLIC", "SLOVENIA", "CROATIA","JAPAN",
-			"SLOVAKIA","HUNGARY","ROMANIA","BULGARIA","GEORGIA","KAZAKHSTAN","UZBEKISTAN","MOLDOVA", "MALAYSIA", "CHINESE TAIPEI", "CHILE", "INDIVIDUAL NEUTRAL ATHLETES"
+			"SLOVAKIA","HUNGARY","ROMANIA","BULGARIA","GEORGIA","KAZAKHSTAN","UZBEKISTAN","MOLDOVA", "MALAYSIA", "CHINESE TAIPEI", "CHILE", "INDIVIDUAL NEUTRAL ATHLETES",
+			"TAJIKISTAN", "ISRAEL", "URUGUAY"
 		};
 
 		public static HashSet<string> NameSet
@@ -71,7 +72,8 @@
 			"Shamil Yenus","Fogarty Thomas","Budhathoki Magar Janak","Valkov Daniil","Tirelli Lepore Andrea","Lagies Tristan","Kim Vladimir","Wealleans Keara","Wendykier Michelle",
 			"Schmidt Victoria","Bordiez Aldana","Stetinova Eva","Reszka Klaudia","Vrinat Alice","Kanka Filippa","Beaudoin Caroline","Takahashi Mika","Makoviichuk Sofiia",
 			"Leppanen Jasmin","Domene Valverde Laura","Amores Ivana","Shan Meng Hui","Becsi Nikolett","Fabian Eszter","Acosta Ailen","Moreno Pomares Ana Maria","Pigarova Anna",
-			"Li Selma","Shibasaki Rio","Lagace Genevieve","Planko Veronika","Cichon Martyna","Singleton Jaimie","Reshetnikova Alena"
+			"Li Selma","Shibasaki Rio","Lagace Genevieve","Planko Veronika","Cichon Martyna","Singleton Jaimie","Reshetnikova Alena",
+			"Stige David","Kiviranta Tino","Lingers Kayden Clyde","Gamboa Silvio","González Brao Rubén","Barenbaum Amit","Helamb Adam","Blicharski Maciej","Gomez De Olivera Thiago","Pasanau Romano Marc","Stopps Ethan","Kloster Javier","Leiva Alejandro","Veiga Juan Pedro","Bin Bahrin Muhammad Aidil","Svanov Jasur","Martinez Pablo","Telenga Pawel","Balcerzak Antoni","Maharaj Adesh","Kvarsnes Anfeldt Fugledal","Lopez Lucas","Nazirov Diyorbek","Horbul Yevhenii",
 		};
 
 		public static HashSet<string> JuniorCompetitorsNameSet => new(StringComparer.OrdinalIgnoreCase)
